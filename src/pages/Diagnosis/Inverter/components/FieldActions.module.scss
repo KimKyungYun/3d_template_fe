@@ -1,0 +1,32 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/utils/media" as media;
+
+.panel {
+  width: 100%;
+  max-width: 640px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: s.$space-2 s.$space-3;
+  padding-top: s.$space-3;
+
+  &__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: s.$space-2;
+  }
+
+  &__hint {
+    @include t.caption;
+
+    color: var(--text-faint);
+
+    @include media.compact {
+      display: none;
+    }
+  }
+}

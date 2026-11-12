@@ -1,0 +1,75 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/utils/media" as media;
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: var(--page);
+
+  // 3D 위에 겹치는 장식 — 클릭은 모두 통과시킨다
+  &__hud {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  // 글자가 놓이는 왼쪽 아래와 카드가 놓이는 오른쪽을 어둡게 눌러 읽히게 한다
+  &__vignette {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 60% at 0% 100%, color-mix(in srgb, var(--page) 88%, transparent), transparent 70%),
+      linear-gradient(270deg, color-mix(in srgb, var(--page) 72%, transparent) 0%, transparent 42%),
+      linear-gradient(0deg, color-mix(in srgb, var(--page) 55%, transparent) 0%, transparent 30%);
+
+    @include media.tablet {
+      background: linear-gradient(0deg, color-mix(in srgb, var(--page) 92%, transparent) 30%, transparent 75%);
+    }
+  }
+
+  // 뷰파인더 모서리 — 화면 네 귀퉁이의 꺾쇠
+  &__frame {
+    position: absolute;
+    inset: s.$space-6;
+    background:
+      linear-gradient(var(--accent-line), var(--accent-line)) top left / 28px 1px no-repeat,
+      linear-gradient(var(--accent-line), var(--accent-line)) top left / 1px 28px no-repeat,
+      linear-gradient(var(--accent-line), var(--accent-line)) top right / 28px 1px no-repeat,
+      linear-gradient(var(--accent-line), var(--accent-line)) top right / 1px 28px no-repeat,
+      linear-gradient(var(--accent-line), var(--accent-line)) bottom left / 28px 1px no-repeat,
+      linear-gradient(var(--accent-line), var(--accent-line)) bottom left / 1px 28px no-repeat,
+      linear-gradient(var(--accent-line), var(--accent-line)) bottom right / 28px 1px no-repeat,
+      linear-gradient(var(--accent-line), var(--accent-line)) bottom right / 1px 28px no-repeat;
+
+    @include media.mobile {
+      inset: s.$space-3;
+    }
+  }
+
+  &__meta {
+    position: absolute;
+    top: s.$space-9;
+    left: clamp(24px, 6vw, 96px);
+    display: flex;
+    flex-direction: column;
+    gap: s.$space-2;
+
+    @include media.tablet {
+      top: s.$space-6;
+      left: s.$space-5;
+    }
+  }
+
+  &__readout {
+    margin: 0;
+  }
+
+  &__site {
+    @include t.data-sm;
+
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+  }
+}

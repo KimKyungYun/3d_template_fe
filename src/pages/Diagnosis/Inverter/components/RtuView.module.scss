@@ -1,0 +1,59 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+
+.rtu {
+  display: flex;
+  flex-direction: column;
+  gap: s.$space-3;
+
+  &__table {
+    @include t.caption;
+
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--text);
+
+    th {
+      padding: 4px 6px;
+      border-bottom: 1px solid var(--line);
+      color: var(--text-muted);
+      font-weight: 500;
+      text-align: left;
+    }
+
+    td {
+      padding: 5px 6px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    tr {
+      cursor: pointer;
+
+      &:hover td {
+        background-color: var(--surface-hover);
+      }
+
+      &[data-state="lost"] .rtu__state {
+        color: var(--critical);
+        font-weight: 600;
+      }
+    }
+  }
+
+  &__row--active td {
+    background-color: var(--accent-soft);
+  }
+
+  &__state {
+    color: var(--ok);
+  }
+
+  &__advice {
+    @include t.body-sm;
+
+    padding: s.$space-2 s.$space-3;
+    border-left: 2px solid var(--critical);
+    background-color: var(--critical-soft);
+    color: var(--text);
+  }
+}

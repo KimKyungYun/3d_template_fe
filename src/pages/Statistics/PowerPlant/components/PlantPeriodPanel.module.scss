@@ -1,0 +1,17 @@
+@use "@/styles/tokens/spacing" as s;
+
+.panel {
+  flex-shrink: 0;
+}
+
+.period {
+  display: flex;
+  flex-direction: column;
+  gap: s.$space-3;
+
+  &__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: s.$space-2;
+  }
+}

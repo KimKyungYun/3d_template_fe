@@ -1,0 +1,83 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+
+.guide {
+  display: flex;
+  flex-direction: column;
+  gap: s.$space-2;
+
+  &__summary {
+    @include t.label-md;
+
+    color: var(--text-strong);
+  }
+
+  &__description {
+    @include t.body-sm;
+
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    color: var(--text-muted);
+
+    li::before {
+      margin-right: 6px;
+      color: var(--text-faint);
+      content: "·";
+    }
+  }
+
+  &__head {
+    @include t.eyebrow;
+
+    margin-top: s.$space-1;
+    color: var(--accent);
+  }
+
+  &__plan {
+    @include t.body-sm;
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: var(--text);
+  }
+
+  &__step {
+    display: flex;
+    align-items: flex-start;
+    gap: s.$space-2;
+    width: 100%;
+    padding: 4px 6px;
+    border-radius: s.$radius-xs;
+    text-align: left;
+
+    &:hover {
+      background-color: var(--surface-hover);
+    }
+
+    &--done {
+      color: var(--text-faint);
+      text-decoration: line-through;
+    }
+  }
+
+  &__step--done &__check {
+    border-color: var(--ok);
+    background-color: var(--ok-soft);
+    color: var(--ok);
+  }
+
+  &__check {
+    @include t.data-sm;
+
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    font-size: 0.625rem;
+  }
+}

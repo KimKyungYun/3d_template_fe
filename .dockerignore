@@ -1,0 +1,16 @@
+.git
+.github
+node_modules
+dist
+dist-ssr
+.pnp.cjs
+.pnp.loader.mjs
+.yarn/cache
+.yarn/unplugged
+.yarn/install-state.gz
+.env
+.env.*
+*.log
+*.tsbuildinfo
+.vscode
+.idea

@@ -1,0 +1,403 @@
+name: GitHub Slack Alert
+
+on:
+  pull_request:
+    types: [opened, review_requested]
+  pull_request_review:
+    types: [submitted]
+  issue_comment:
+    types: [created]
+
+jobs:
+  # 1. PR 생성 시 알림
+  notify-pr-opened:
+    name: Notify PR Opened
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.action == 'opened' &&
+      github.event.pull_request.draft == false &&
+      github.actor != 'dependabot[bot]'
+    steps:
+      - name: Build Slack payload
+        # 모든 이벤트 값은 env 블록으로 격리 후 jq --arg 로 전달하여
+        # 셸 인젝션 및 JSON 이스케이프 문제를 방지한다.
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          REPO: ${{ github.repository }}
+          REVIEWERS_JSON: ${{ toJson(github.event.pull_request.requested_reviewers) }}
+        run: |
+          # PR 번호는 숫자만 허용하여 인젝션 차단
+          SAFE_NUMBER=$(printf '%s' "$PR_NUMBER" | grep -oE '^[0-9]+$' || echo "0")
+          TITLE="#${SAFE_NUMBER} ${PR_TITLE}"
+
+          REVIEWERS=$(printf '%s' "$REVIEWERS_JSON" \
+            | jq -r '[.[].login] | if length == 0 then "없음" else map("@" + .) | join(", ") end')
+
+          # 본문 첫 250자만 사용하고 줄바꿈 제거 (JSON 안전)
+          BODY_SHORT=$(printf '%s' "$PR_BODY" | head -c 250 | tr -d '\r\n' | sed 's/[[:space:]]\+/ /g')
+          if [ -z "$BODY_SHORT" ]; then
+            BODY_SHORT="_(설명 없음)_"
+          fi
+
+          # jq --arg 가 모든 특수문자를 JSON-safe 하게 인코딩
+          jq -n \
+            --arg title  "$TITLE" \
+            --arg url    "$PR_URL" \
+            --arg author "$PR_AUTHOR" \
+            --arg head   "$HEAD_REF" \
+            --arg base   "$BASE_REF" \
+            --arg body   "$BODY_SHORT" \
+            --arg revs   "$REVIEWERS" \
+            --arg repo   "$REPO" \
+            '{
+              "text": "📬 새 PR이 열렸습니다",
+              "attachments": [
+                {
+                  "color": "#0075ca",
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": ("📬 *새 PR이 열렸습니다*\n*<" + $url + "|" + $title + ">*")
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": ("> " + $body)
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": ("*작성자*\n" + $author)
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": ("*브랜치*\n`" + $head + "` → `" + $base + "`")
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": ("*리뷰어*\n" + $revs)
+                        }
+                      ]
+                    },
+                    {
+                      "type": "context",
+                      "elements": [
+                        {
+                          "type": "mrkdwn",
+                          "text": $repo
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }' > /tmp/slack-payload.json
+
+      # 커밋 해시로 고정하여 공급망 공격 방지 (v1.27.0)
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0
+        with:
+          payload-file-path: /tmp/slack-payload.json
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.FE_PR_SLACK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+  # 2. 리뷰 요청 시 알림
+  notify-review-requested:
+    name: Notify Review Requested
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.action == 'review_requested' &&
+      github.event.pull_request.draft == false &&
+      github.actor != 'dependabot[bot]'
+    steps:
+      - name: Build Slack payload
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          # github.actor = 리뷰를 실제로 요청한 사람 (PR 작성자와 다를 수 있음)
+          REQUESTER: ${{ github.actor }}
+          REVIEWER: ${{ github.event.requested_reviewer.login }}
+          REPO: ${{ github.repository }}
+        run: |
+          SAFE_NUMBER=$(printf '%s' "$PR_NUMBER" | grep -oE '^[0-9]+$' || echo "0")
+          TITLE="#${SAFE_NUMBER} ${PR_TITLE}"
+
+          jq -n \
+            --arg title     "$TITLE" \
+            --arg url       "$PR_URL" \
+            --arg requester "$REQUESTER" \
+            --arg reviewer  "$REVIEWER" \
+            --arg repo      "$REPO" \
+            '{
+              "text": "👀 리뷰 요청이 왔습니다",
+              "attachments": [
+                {
+                  "color": "#8250df",
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": ("👀 *리뷰 요청이 왔습니다*\n*<" + $url + "|" + $title + ">*")
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": ("*요청자*\n" + $requester)
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": ("*리뷰어*\n@" + $reviewer)
+                        }
+                      ]
+                    },
+                    {
+                      "type": "context",
+                      "elements": [
+                        {
+                          "type": "mrkdwn",
+                          "text": $repo
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }' > /tmp/slack-payload.json
+
+      # 커밋 해시로 고정하여 공급망 공격 방지 (v1.27.0)
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0
+        with:
+          payload-file-path: /tmp/slack-payload.json
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.FE_PR_SLACK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+  # 3. PR 리뷰 제출 시 알림 (승인 / 변경 요청 / 코멘트 리뷰)
+  notify-pr-review:
+    name: Notify PR Review
+    runs-on: ubuntu-latest
+    # 코멘트 리뷰(commented)도 포함하되, 본문 없는 리뷰(인라인 코멘트만 남긴 경우)는 제외한다.
+    if: >
+      github.event_name == 'pull_request_review' &&
+      !endsWith(github.actor, '[bot]') &&
+      (github.event.review.state != 'commented' || github.event.review.body)
+    steps:
+      - name: Build Slack payload
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          REVIEW_STATE: ${{ github.event.review.state }}
+          REVIEWER: ${{ github.event.review.user.login }}
+          REVIEW_BODY: ${{ github.event.review.body }}
+          REVIEW_URL: ${{ github.event.review.html_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          SAFE_NUMBER=$(printf '%s' "$PR_NUMBER" | grep -oE '^[0-9]+$' || echo "0")
+          TITLE="#${SAFE_NUMBER} ${PR_TITLE}"
+
+          case "$REVIEW_STATE" in
+            approved)          COLOR="#2cbe4e"; EMOJI="✅"; LABEL="승인" ;;
+            changes_requested) COLOR="#e11d48"; EMOJI="🔁"; LABEL="변경 요청" ;;
+            *)                 COLOR="#0075ca"; EMOJI="💬"; LABEL="코멘트 리뷰" ;;
+          esac
+
+          # 내용: 앞 300자만 단일 행으로 정규화
+          CONTENT=$(printf '%s' "$REVIEW_BODY" | head -c 300 | tr -d '\r\n' | sed 's/[[:space:]]\+/ /g')
+          [ -z "$CONTENT" ] && CONTENT="_(내용 없음)_"
+          # 요약: 첫 비어있지 않은 줄에서 마크다운 머리기호 제거 후 120자
+          SUMMARY=$(printf '%s' "$REVIEW_BODY" | tr -d '\r' \
+            | grep -m1 -v '^[[:space:]]*$' \
+            | sed -E 's/^[[:space:]]*([#>*_+-]+[[:space:]]*)+//' | head -c 120)
+          [ -z "$SUMMARY" ] && SUMMARY="_(요약 없음)_"
+
+          jq -n \
+            --arg title      "$TITLE" \
+            --arg url        "$PR_URL" \
+            --arg author     "$REVIEWER" \
+            --arg pr_author  "$PR_AUTHOR" \
+            --arg content    "$CONTENT" \
+            --arg summary    "$SUMMARY" \
+            --arg color      "$COLOR" \
+            --arg emoji      "$EMOJI" \
+            --arg label      "$LABEL" \
+            --arg detail_url "$REVIEW_URL" \
+            --arg repo       "$REPO" \
+            '{
+              "text": ($emoji + " " + $label + " — " + $title),
+              "attachments": [
+                {
+                  "color": $color,
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": ($emoji + " *" + $label + "이 등록되었습니다*\n*<" + $url + "|" + $title + ">*")
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": ("> " + $content)
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        { "type": "mrkdwn", "text": ("*작성자*\n" + $author) },
+                        { "type": "mrkdwn", "text": ("*PR 작성자*\n" + $pr_author) },
+                        { "type": "mrkdwn", "text": ("*유형*\n" + $label) }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": ("*요약*\n" + $summary)
+                      }
+                    },
+                    {
+                      "type": "context",
+                      "elements": [
+                        {
+                          "type": "mrkdwn",
+                          "text": ($repo + "  |  <" + $detail_url + "|상세 보기>")
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }' > /tmp/slack-payload.json
+
+      # 커밋 해시로 고정하여 공급망 공격 방지 (v1.27.0)
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0
+        with:
+          payload-file-path: /tmp/slack-payload.json
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.FE_PR_SLACK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+  # 4. PR 일반 코멘트 작성 시 알림 (대화창 코멘트, 인라인 코드 코멘트는 제외)
+  notify-pr-comment:
+    name: Notify PR Comment
+    runs-on: ubuntu-latest
+    # issue_comment 는 이슈에도 발생하므로 pull_request 가 있는 경우(=PR)만, 봇 제외.
+    if: >
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
+      !endsWith(github.actor, '[bot]')
+    steps:
+      - name: Build Slack payload
+        env:
+          PR_TITLE: ${{ github.event.issue.title }}
+          PR_URL: ${{ github.event.issue.html_url }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          PR_AUTHOR: ${{ github.event.issue.user.login }}
+          COMMENTER: ${{ github.event.comment.user.login }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_URL: ${{ github.event.comment.html_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          SAFE_NUMBER=$(printf '%s' "$PR_NUMBER" | grep -oE '^[0-9]+$' || echo "0")
+          TITLE="#${SAFE_NUMBER} ${PR_TITLE}"
+
+          CONTENT=$(printf '%s' "$COMMENT_BODY" | head -c 300 | tr -d '\r\n' | sed 's/[[:space:]]\+/ /g')
+          [ -z "$CONTENT" ] && CONTENT="_(내용 없음)_"
+          SUMMARY=$(printf '%s' "$COMMENT_BODY" | tr -d '\r' \
+            | grep -m1 -v '^[[:space:]]*$' \
+            | sed -E 's/^[[:space:]]*([#>*_+-]+[[:space:]]*)+//' | head -c 120)
+          [ -z "$SUMMARY" ] && SUMMARY="_(요약 없음)_"
+
+          jq -n \
+            --arg title      "$TITLE" \
+            --arg url        "$PR_URL" \
+            --arg author     "$COMMENTER" \
+            --arg pr_author  "$PR_AUTHOR" \
+            --arg content    "$CONTENT" \
+            --arg summary    "$SUMMARY" \
+            --arg detail_url "$COMMENT_URL" \
+            --arg repo       "$REPO" \
+            '{
+              "text": ("💬 새 코멘트 — " + $title),
+              "attachments": [
+                {
+                  "color": "#57606a",
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": ("💬 *새 코멘트가 달렸습니다*\n*<" + $url + "|" + $title + ">*")
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": ("> " + $content)
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        { "type": "mrkdwn", "text": ("*작성자*\n" + $author) },
+                        { "type": "mrkdwn", "text": ("*PR 작성자*\n" + $pr_author) },
+                        { "type": "mrkdwn", "text": "*유형*\n코멘트" }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": ("*요약*\n" + $summary)
+                      }
+                    },
+                    {
+                      "type": "context",
+                      "elements": [
+                        {
+                          "type": "mrkdwn",
+                          "text": ($repo + "  |  <" + $detail_url + "|상세 보기>")
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }' > /tmp/slack-payload.json
+
+      # 커밋 해시로 고정하여 공급망 공격 방지 (v1.27.0)
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0
+        with:
+          payload-file-path: /tmp/slack-payload.json
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.FE_PR_SLACK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

@@ -1,0 +1,79 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: s.$space-3;
+
+  &__time {
+    @include t.data-sm;
+
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+  }
+
+  &__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: s.$space-2;
+  }
+
+  &__hero {
+    display: flex;
+    align-items: center;
+    gap: s.$space-4;
+  }
+
+  &__ratio {
+    @include t.data-sm;
+
+    color: var(--text-strong);
+    font-weight: 600;
+
+    small {
+      color: var(--text-muted);
+      font-size: 0.625rem;
+    }
+  }
+
+  &__power {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__label {
+    @include t.label-sm;
+
+    color: var(--text-muted);
+  }
+
+  &__powerValue {
+    @include t.data-lg;
+
+    color: var(--solar);
+    text-shadow: 0 0 18px var(--solar-soft);
+    white-space: nowrap;
+
+    small {
+      @include t.caption;
+
+      margin-left: 4px;
+      color: var(--text-muted);
+    }
+  }
+
+  &__caption {
+    @include t.caption;
+
+    color: var(--text-faint);
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: s.$space-2;
+  }
+}

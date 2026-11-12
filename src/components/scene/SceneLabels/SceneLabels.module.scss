@@ -1,0 +1,52 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+
+.labels {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+
+  &__item {
+    @include t.label-sm;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: s.$space-1;
+    padding: 3px s.$space-2;
+    border: 1px solid var(--line);
+    border-radius: s.$radius-full;
+    background: var(--glass);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(8px);
+    color: var(--text);
+    white-space: nowrap;
+    user-select: none;
+    will-change: transform;
+
+    // 주변 지물은 상자 없이 글자만 — 바탕색 그림자로 읽히게 한다
+    &--landmark {
+      @include t.body-sm;
+
+      border-color: transparent;
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+      color: var(--text-muted);
+      text-shadow: 0 0 3px var(--page), 0 0 6px var(--page);
+    }
+
+    &--active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--text-on-accent);
+    }
+
+    &--hidden {
+      display: none;
+    }
+  }
+}

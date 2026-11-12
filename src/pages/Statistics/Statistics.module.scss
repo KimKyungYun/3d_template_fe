@@ -1,0 +1,91 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/patterns/hud" as hud;
+@use "@/styles/utils/media" as media;
+@use "@/styles/utils/mixins" as mx;
+
+.statistics {
+  // 나침반은 오른쪽 기둥 바로 왼쪽, 조회 띠 아래
+  --compass-top: 96px;
+  --compass-right: calc(360px + #{s.$hud-gap} * 2);
+
+  position: absolute;
+  inset: 0;
+
+  @include media.compact {
+    --compass-top: 88px;
+    --compass-right: calc(320px + #{s.$space-3} * 2);
+  }
+
+  @include media.mobile {
+    --stage-canvas-bottom: 58%;
+    --compass-top: #{s.$space-3};
+    --compass-right: #{s.$space-3};
+  }
+
+  &__invalid {
+    @include hud.blueprint-grid;
+
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  // 3D 위 HUD 층 — 좌(뎁스) · 가운데(조회 띠·스크러버) · 우(뎁스)
+  &__overlay {
+    position: absolute;
+    inset: 0;
+
+    // 3D 이름표·카드(z 2~4)보다 위 — 가운데 띠를 이름표가 덮지 않게. 나침반(5)·스캔 알림(6)은 그 위
+    z-index: 5;
+    display: grid;
+    grid-template-areas: "left center right";
+    grid-template-columns: 300px minmax(0, 1fr) 360px;
+    gap: s.$hud-gap;
+    padding: s.$hud-gap;
+    pointer-events: none;
+
+    @include media.compact {
+      grid-template-columns: 260px minmax(0, 1fr) 320px;
+      gap: s.$space-3;
+      padding: s.$space-3;
+    }
+
+    @include media.tablet {
+      grid-template-areas: "center right";
+      grid-template-columns: minmax(0, 1fr) 320px;
+
+      > aside:first-child {
+        display: none;
+      }
+    }
+
+    @include media.mobile {
+      top: 42%;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      pointer-events: auto;
+
+      > aside:first-child {
+        display: flex;
+      }
+    }
+  }
+
+  &__center {
+    @include mx.pass-through;
+
+    grid-area: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+
+    @include media.mobile {
+      order: -1;
+      gap: s.$space-3;
+    }
+  }
+}

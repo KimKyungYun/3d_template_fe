@@ -1,0 +1,50 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: s.$radius-sm;
+  background-color: var(--surface-sunken);
+
+  &--sm &__item {
+    @include t.label-sm;
+
+    height: 26px;
+    padding: 0 s.$space-2;
+  }
+
+  &__item {
+    @include t.label-md;
+
+    position: relative;
+    flex: 1;
+    height: 32px;
+    padding: 0 s.$space-3;
+    border-radius: s.$radius-xs;
+    color: var(--text-muted);
+    white-space: nowrap;
+    transition: color 0.16s ease;
+
+    &:hover {
+      color: var(--text-strong);
+    }
+
+    &--active {
+      color: var(--accent);
+    }
+  }
+
+  &__thumb {
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--accent-line);
+    border-radius: s.$radius-xs;
+    background-color: var(--accent-soft);
+  }
+
+  &__label {
+    position: relative;
+  }
+}

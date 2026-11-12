@@ -1,0 +1,19 @@
+@use "@/styles/tokens/spacing" as s;
+
+.panel {
+  flex: 1;
+  min-height: 0;
+}
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: s.$space-3;
+  height: 100%;
+
+  &__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+}

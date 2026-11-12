@@ -1,0 +1,61 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+
+.badge {
+  @include t.label-sm;
+
+  --tone: var(--text-muted);
+  --tone-soft: var(--surface-hover);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 s.$space-2;
+  border: 1px solid color-mix(in srgb, var(--tone) 40%, transparent);
+  border-radius: s.$radius-full;
+  background-color: var(--tone-soft);
+  color: var(--tone);
+  white-space: nowrap;
+
+  &--ok {
+    --tone: var(--ok);
+    --tone-soft: var(--ok-soft);
+  }
+
+  &--caution {
+    --tone: var(--caution);
+    --tone-soft: var(--caution-soft);
+  }
+
+  &--critical {
+    --tone: var(--critical);
+    --tone-soft: var(--critical-soft);
+  }
+
+  &--offline {
+    --tone: var(--offline);
+    --tone-soft: var(--offline-soft);
+  }
+
+  &--live &__dot {
+    animation: badge-pulse 1.4s ease-out infinite;
+  }
+
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--tone);
+  }
+}
+
+@keyframes badge-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--tone) 70%, transparent);
+  }
+
+  100% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}

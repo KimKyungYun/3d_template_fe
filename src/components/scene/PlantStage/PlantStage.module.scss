@@ -1,0 +1,13 @@
+.stage {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+
+  /* 도면을 끌어 돌리는 동안 위에 뜬 이름표·카드 글자가 선택돼 파랗게 칠해지지 않게 한다 */
+  user-select: none;
+
+  &__canvas {
+    position: absolute;
+    inset: 0 0 var(--stage-canvas-bottom, 0) 0;
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "extends": ["stylelint-config-standard-scss"],
+  "plugins": ["stylelint-scss"],
+  "customSyntax": "postcss-scss",
+  "rules": {
+    "scss/load-partial-extension": null,
+    "scss/load-no-partial-leading-underscore": null,
+    "import-notation": "string",
+    "selector-class-pattern": null,
+    "custom-property-empty-line-before": null,
+    "declaration-empty-line-before": null,
+    "no-descending-specificity": null,
+    "scss/dollar-variable-empty-line-before": null,
+    "selector-pseudo-class-no-unknown": [
+      true,
+      { "ignorePseudoClasses": ["global", "local"] }
+    ],
+    "media-feature-range-notation": "context",
+    "value-keyword-case": ["lower", { "ignoreProperties": ["/^--/", "font-family"] }]
+  }
+}

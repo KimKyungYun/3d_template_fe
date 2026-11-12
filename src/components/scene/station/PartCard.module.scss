@@ -1,0 +1,56 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+
+.part {
+  display: flex;
+  flex-direction: column;
+  gap: s.$space-2;
+  max-width: 280px;
+  padding: s.$space-2 s.$space-3;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: s.$space-2;
+  }
+
+  &__title {
+    @include t.label-md;
+
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: s.$space-2;
+  }
+
+  &__subtitle {
+    @include t.caption;
+
+    color: var(--text-muted);
+  }
+
+  &__lines {
+    @include t.body-sm;
+
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    color: var(--text);
+  }
+
+  &__actions {
+    @include t.caption;
+
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-left: s.$space-4;
+    border-left: 2px solid var(--accent-line);
+    color: var(--text-muted);
+    list-style: decimal;
+  }
+}

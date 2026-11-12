@@ -1,0 +1,55 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/utils/media" as media;
+
+.bar {
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: s.$space-4;
+  padding: 0 s.$space-5;
+  border-bottom: 1px solid var(--line);
+  background-color: var(--surface);
+
+  @include media.mobile {
+    padding: 0 s.$space-3;
+  }
+
+  &__title {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  &__titleInner {
+    display: flex;
+    align-items: baseline;
+    gap: s.$space-3;
+  }
+
+  // 영어 코드 라벨을 빼고 그 자리만큼 화면 이름을 키웠다
+  &__heading {
+    @include t.title-lg;
+
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+
+  &__tools {
+    display: flex;
+    align-items: center;
+    gap: s.$space-4;
+  }
+
+  &__user {
+    @include t.label-sm;
+
+    padding-left: s.$space-4;
+    border-left: 1px solid var(--line);
+    color: var(--text-muted);
+
+    @include media.tablet {
+      display: none;
+    }
+  }
+}

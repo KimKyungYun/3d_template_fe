@@ -1,0 +1,30 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/utils/media" as media;
+
+.clock {
+  @include t.data-sm;
+
+  display: flex;
+  align-items: baseline;
+  gap: s.$space-2;
+  color: var(--text-muted);
+
+  @include media.tablet {
+    display: none;
+  }
+
+  &__time {
+    color: var(--text-strong);
+  }
+
+  &__colon {
+    animation: clock-blink 1s steps(1) infinite;
+  }
+}
+
+@keyframes clock-blink {
+  50% {
+    opacity: 0.25;
+  }
+}

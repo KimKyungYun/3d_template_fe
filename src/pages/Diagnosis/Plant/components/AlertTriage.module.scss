@@ -1,0 +1,118 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/utils/mixins" as mx;
+
+.panel {
+  flex: 1;
+  min-height: 0;
+}
+
+.triage {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 100%;
+  padding: 0 s.$space-2 s.$space-2;
+  overflow-y: auto;
+
+  &__filters {
+    display: flex;
+    gap: s.$space-1;
+    padding: 0 s.$space-3 s.$space-2;
+  }
+
+  &__chip {
+    @include t.label-sm;
+    @include mx.press(0.95);
+
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 0 s.$space-2;
+    border: 1px solid var(--line);
+    border-radius: s.$radius-full;
+    color: var(--text-muted);
+
+    span {
+      @include t.data-sm;
+
+      font-size: 0.6875rem;
+    }
+
+    &--active {
+      border-color: var(--accent-line);
+      background-color: var(--accent-soft);
+      color: var(--accent);
+    }
+  }
+
+  &__row {
+    @include mx.press(0.985);
+
+    --tone: var(--text-muted);
+
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px s.$space-2;
+    width: 100%;
+    padding: s.$space-2 s.$space-3;
+    border-radius: s.$radius-xs;
+    text-align: left;
+
+    &::before {
+      position: absolute;
+      top: 8px;
+      bottom: 8px;
+      left: 0;
+      width: 2px;
+      background-color: var(--tone);
+      box-shadow: 0 0 8px var(--tone);
+      content: "";
+    }
+
+    &:hover {
+      background-color: var(--surface-hover);
+    }
+
+    &--critical {
+      --tone: var(--critical);
+    }
+
+    &--caution {
+      --tone: var(--caution);
+    }
+
+    &--offline {
+      --tone: var(--offline);
+    }
+  }
+
+  &__name {
+    @include t.data-sm;
+
+    color: var(--text-strong);
+  }
+
+  &__label {
+    @include t.label-sm;
+
+    color: var(--tone);
+    text-align: right;
+  }
+
+  &__meta {
+    @include t.caption;
+    @include mx.truncate;
+
+    color: var(--text-muted);
+  }
+
+  &__days {
+    @include t.caption;
+
+    color: var(--text-faint);
+    text-align: right;
+  }
+}

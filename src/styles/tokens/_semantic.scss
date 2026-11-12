@@ -1,0 +1,137 @@
+// Semantic Tokens (CSS Custom Properties)
+// 컴포넌트는 반드시 var(--*) 로만 색을 참조한다.
+// 다크가 기본이고, html[data-theme="light"] 로 라이트를 건다.
+
+@use "./primitive" as p;
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --font-sans: "Pretendard Variable", pretendard, -apple-system, blinkmacsystemfont, system-ui, sans-serif;
+  --font-data: "JetBrains Mono", ui-monospace, "SFMono-Regular", menlo, monospace;
+
+  // Surface — 3D 위에 뜨는 HUD 는 반투명 유리, 일반 판은 불투명
+  --page: #{p.$abyss-95};
+  --surface: #{p.$abyss-90};
+  --surface-raised: #{p.$abyss-85};
+  --surface-sunken: #050910;
+  --surface-hover: #{p.$abyss-80};
+  --glass: rgb(9 15 25 / 74%);
+  --glass-strong: rgb(9 15 25 / 88%);
+  --glass-blur: 14px;
+  --overlay: rgb(2 5 10 / 64%);
+
+  // Text
+  --text-strong: #eaf1fa;
+  --text: #c2cfe0;
+  --text-muted: #8494ad;
+  --text-faint: #56667e;
+  --text-on-accent: #031218;
+
+  // Line — 블루프린트 헤어라인
+  --line: rgb(140 178 228 / 14%);
+  --line-strong: rgb(140 178 228 / 28%);
+  --line-grid: rgb(140 178 228 / 6%);
+
+  // Accent — 조작·선택·스캔
+  --accent: #{p.$scan-40};
+  --accent-strong: #{p.$scan-30};
+  --accent-soft: rgb(62 224 255 / 12%);
+  --accent-line: rgb(62 224 255 / 42%);
+  --accent-glow: 0 0 0 1px rgb(62 224 255 / 50%), 0 0 18px rgb(62 224 255 / 28%);
+
+  // Solar — 출력(kW)·발전량
+  --solar: #{p.$solar-40};
+  --solar-soft: rgb(255 181 71 / 14%);
+  --solar-line: rgb(255 181 71 / 45%);
+
+  // Panel — 3D 패널 파랑과 같은 값 (범례·미니맵용)
+  --panel: #{p.$panel-dark};
+
+  // Status
+  --ok: #{p.$ok-40};
+  --ok-soft: rgb(52 211 153 / 13%);
+  --caution: #{p.$caution-40};
+  --caution-soft: rgb(255 157 46 / 15%);
+  --critical: #{p.$critical-40};
+  --critical-soft: rgb(255 77 94 / 15%);
+  --offline: #{p.$offline-40};
+  --offline-soft: rgb(122 134 153 / 18%);
+
+  // Chart
+  --chart-grid: rgb(140 178 228 / 10%);
+  --chart-axis: #{p.$abyss-50};
+  --chart-actual: #{p.$solar-40};
+  --chart-expected: #{p.$scan-50};
+  --chart-irradiance: #a78bfa;
+
+  // Elevation
+  --shadow-sm: 0 1px 2px rgb(#{p.$shadow-color} / 40%);
+  --shadow-md: 0 6px 18px rgb(#{p.$shadow-color} / 45%);
+  --shadow-lg: 0 18px 48px rgb(#{p.$shadow-color} / 55%);
+  --shadow-focus: 0 0 0 3px rgb(62 224 255 / 30%);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  // Surface
+  --page: #{p.$abyss-10};
+  --surface: #{p.$abyss-0};
+  --surface-raised: #{p.$abyss-0};
+  --surface-sunken: #{p.$abyss-5};
+  --surface-hover: #{p.$abyss-5};
+  --glass: rgb(255 255 255 / 78%);
+  --glass-strong: rgb(255 255 255 / 92%);
+  --overlay: rgb(11 19 31 / 38%);
+
+  // Text
+  --text-strong: #{p.$abyss-90};
+  --text: #{p.$abyss-70};
+  --text-muted: #{p.$abyss-50};
+  --text-faint: #{p.$abyss-40};
+  --text-on-accent: #{p.$abyss-0};
+
+  // Line
+  --line: rgb(23 34 52 / 12%);
+  --line-strong: rgb(23 34 52 / 24%);
+  --line-grid: rgb(23 34 52 / 5%);
+
+  // Accent
+  --accent: #{p.$scan-60};
+  --accent-strong: #{p.$scan-70};
+  --accent-soft: rgb(10 143 179 / 10%);
+  --accent-line: rgb(10 143 179 / 40%);
+  --accent-glow: 0 0 0 1px rgb(10 143 179 / 45%), 0 0 14px rgb(10 143 179 / 18%);
+
+  // Solar
+  --solar: #{p.$solar-60};
+  --solar-soft: rgb(217 130 43 / 12%);
+  --solar-line: rgb(217 130 43 / 40%);
+
+  --panel: #{p.$panel-light};
+
+  // Status
+  --ok: #{p.$ok-60};
+  --ok-soft: rgb(15 159 110 / 10%);
+  --caution: #{p.$caution-60};
+  --caution-soft: rgb(217 120 10 / 12%);
+  --critical: #{p.$critical-60};
+  --critical-soft: rgb(217 44 62 / 10%);
+  --offline: #{p.$offline-60};
+  --offline-soft: rgb(91 101 119 / 12%);
+
+  // Chart
+  --chart-grid: rgb(23 34 52 / 8%);
+  --chart-axis: #{p.$abyss-40};
+  --chart-actual: #{p.$solar-60};
+  --chart-expected: #{p.$scan-60};
+  --chart-irradiance: #7c5cf0;
+
+  // Elevation
+  --shadow-sm: 0 1px 2px rgb(#{p.$shadow-color} / 8%);
+  --shadow-md: 0 6px 18px rgb(#{p.$shadow-color} / 10%);
+  --shadow-lg: 0 18px 44px rgb(#{p.$shadow-color} / 14%);
+  --shadow-focus: 0 0 0 3px rgb(10 143 179 / 24%);
+}

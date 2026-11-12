@@ -1,0 +1,73 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+
+$size: 68px;
+$mark-inset: 8px;
+
+// 위치는 페이지가 CSS 변수로 정한다 (--compass-top, --compass-right) — 패널을 피해 자리 잡도록
+.compass {
+  --heading: 0deg;
+
+  position: absolute;
+  top: var(--compass-top, #{s.$space-3});
+  right: var(--compass-right, #{s.$space-3});
+  z-index: 5;
+  width: $size;
+  height: $size;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--glass);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(var(--glass-blur));
+  pointer-events: none;
+
+  &__dial {
+    position: absolute;
+    inset: 0;
+    rotate: var(--heading);
+  }
+
+  // 북쪽 바늘 — 가운데에서 위로 뻗는 빨간 삼각형, 아래는 옅은 꼬리
+  &__needle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 38px;
+    background: linear-gradient(180deg, var(--critical) 50%, var(--line-strong) 50%);
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    translate: -50% -50%;
+  }
+
+  // 글자는 원판과 함께 자리를 옮기되, 반대로 돌려 늘 똑바로 선다
+  &__mark {
+    @include t.label-sm;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 14px;
+    margin: -7px 0 0 -7px;
+    color: var(--text-muted);
+    line-height: 14px;
+    text-align: center;
+    rotate: calc(-1 * var(--heading));
+
+    &--north {
+      color: var(--critical);
+      translate: 0 (-($size * 0.5) + $mark-inset + 1px);
+    }
+
+    &--east {
+      translate: ($size * 0.5 - $mark-inset - 1px) 0;
+    }
+
+    &--south {
+      translate: 0 ($size * 0.5 - $mark-inset - 1px);
+    }
+
+    &--west {
+      translate: (-($size * 0.5) + $mark-inset + 1px) 0;
+    }
+  }
+}

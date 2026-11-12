@@ -1,0 +1,143 @@
+// Typography scale
+// 본문·UI = Pretendard Variable / 수치·코드·좌표 = JetBrains Mono (tabular)
+// 컴포넌트에서 font-size 를 직접 쓰지 않고 이 믹스인만 사용한다.
+
+@use "../utils/media" as media;
+
+// ── Display : 로그인·배너 헤드라인 ──────────────────────────
+@mixin display-lg {
+  font-family: var(--font-sans);
+  font-size: 2.75rem;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+
+  @include media.mobile {
+    font-size: 1.875rem;
+  }
+}
+
+// ── Title ───────────────────────────────────────────────────
+@mixin title-lg {
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+
+  @include media.mobile {
+    font-size: 1.25rem;
+  }
+}
+
+@mixin title-md {
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+
+@mixin title-sm {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+
+// ── Body ────────────────────────────────────────────────────
+@mixin body-md {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: -0.005em;
+}
+
+@mixin body-sm {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+// ── Label ───────────────────────────────────────────────────
+@mixin label-md {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+}
+
+@mixin label-sm {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+@mixin caption {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+// ── Data : 수치 전용 (JetBrains Mono + tabular) ─────────────
+@mixin data-base {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+@mixin data-xl {
+  @include data-base;
+
+  font-size: 2.5rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+
+  @include media.mobile {
+    font-size: 2rem;
+  }
+}
+
+@mixin data-lg {
+  @include data-base;
+
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+@mixin data-md {
+  @include data-base;
+
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+@mixin data-sm {
+  @include data-base;
+
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+// ── Eyebrow : 패널 머리의 작은 영문·코드 라벨 ──────────────
+@mixin eyebrow {
+  @include data-base;
+
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}

@@ -1,0 +1,52 @@
+@use "../tokens/spacing" as s;
+@use "../utils/media" as media;
+@use "../utils/mixins" as mx;
+
+/*
+  발전통계·고장진단의 좌우 HUD 기둥 — 페이지 오버레이 그리드의 left·right 칸에 들어간다.
+  뎁스 화면마다 같은 골격을 되풀이하므로 규칙을 믹스인 한 벌로 둔다
+*/
+@mixin left-column {
+  @include mx.pass-through;
+
+  grid-area: left;
+  display: flex;
+  flex-direction: column;
+  gap: s.$space-3;
+  min-height: 0;
+
+  @include media.mobile {
+    flex: none;
+  }
+}
+
+@mixin right-column {
+  @include mx.pass-through;
+
+  grid-area: right;
+  display: flex;
+  flex-direction: column;
+  gap: s.$space-3;
+  min-height: 0;
+
+  @include media.mobile {
+    flex: none;
+  }
+}
+
+// 가운데 칸 — 위 띠와 아래 띠 사이를 비워 3D 를 만지게 둔다
+@mixin center-column {
+  @include mx.pass-through;
+
+  grid-area: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: s.$space-3;
+  min-width: 0;
+
+  @include media.mobile {
+    order: -1;
+  }
+}

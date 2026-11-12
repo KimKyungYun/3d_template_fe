@@ -1,0 +1,71 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+
+.tile {
+  --tone: var(--text-strong);
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: s.$space-3;
+  border: 1px solid var(--line);
+  border-radius: s.$radius-xs;
+  background-color: color-mix(in srgb, var(--surface-sunken) 60%, transparent);
+
+  &--solar {
+    --tone: var(--solar);
+  }
+
+  &--accent {
+    --tone: var(--accent);
+  }
+
+  &--critical {
+    --tone: var(--critical);
+  }
+
+  &__label {
+    @include t.label-sm;
+
+    color: var(--text-muted);
+  }
+
+  &__value {
+    @include t.data-md;
+
+    color: var(--tone);
+    white-space: nowrap;
+
+    small {
+      @include t.caption;
+
+      margin-left: 3px;
+      color: var(--text-muted);
+    }
+  }
+
+  &__sub {
+    @include t.caption;
+
+    color: var(--text-muted);
+  }
+
+  &__meter {
+    position: relative;
+    height: 2px;
+    margin-top: 2px;
+    overflow: hidden;
+    border-radius: 2px;
+    background-color: var(--line);
+
+    > span {
+      position: absolute;
+      inset: 0;
+      background-color: var(--tone);
+      box-shadow: 0 0 6px var(--tone);
+      transform-origin: left;
+      transition: transform 1s cubic-bezier(0.22, 0.68, 0.32, 1);
+    }
+  }
+}

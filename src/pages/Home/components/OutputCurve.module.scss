@@ -1,0 +1,51 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/utils/media" as media;
+
+.panel {
+  width: 100%;
+  max-width: 720px;
+  height: 196px;
+
+  @include media.compact {
+    height: 160px;
+  }
+}
+
+.curve {
+  &__chart {
+    height: 100%;
+  }
+
+  &__legend {
+    display: flex;
+    align-items: center;
+    gap: s.$space-3;
+  }
+
+  &__key {
+    @include t.caption;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+
+    &::before {
+      width: 14px;
+      height: 2px;
+      background-color: var(--chart-actual);
+      content: "";
+    }
+
+    &[data-kind="expected"]::before {
+      background: repeating-linear-gradient(90deg, var(--chart-expected) 0 4px, transparent 4px 7px);
+    }
+  }
+
+  &__peak {
+    @include t.eyebrow;
+
+    color: var(--solar);
+  }
+}

@@ -1,0 +1,124 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/utils/mixins" as mx;
+@use "@/styles/utils/media" as media;
+
+.switcher {
+  position: relative;
+
+  &__trigger {
+    @include t.label-md;
+    @include mx.press(0.97);
+
+    display: inline-flex;
+    align-items: center;
+    gap: s.$space-2;
+    height: 32px;
+    padding: 0 s.$space-3;
+    border: 1px solid var(--line);
+    border-radius: s.$radius-sm;
+    color: var(--text-strong);
+    transition: border-color 0.16s ease;
+
+    &:hover,
+    &--open {
+      border-color: var(--accent-line);
+    }
+
+    > svg:first-child {
+      color: var(--accent);
+    }
+  }
+
+  &__trigger--open &__chevron {
+    transform: rotate(180deg);
+  }
+
+  &__name {
+    @include mx.truncate;
+
+    max-width: 160px;
+
+    @include media.mobile {
+      max-width: 100px;
+    }
+  }
+
+  &__chevron {
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+  }
+
+  &__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 40;
+    width: 300px;
+    padding: s.$space-1;
+    border: 1px solid var(--line-strong);
+    border-radius: s.$radius-sm;
+    background-color: var(--glass-strong);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(var(--glass-blur));
+    transform-origin: top right;
+  }
+
+  &__option {
+    display: flex;
+    align-items: flex-start;
+    gap: s.$space-3;
+    width: 100%;
+    padding: s.$space-2 s.$space-3;
+    border-radius: s.$radius-xs;
+    text-align: left;
+
+    &:hover {
+      background-color: var(--surface-hover);
+    }
+
+    &--active {
+      background-color: var(--accent-soft);
+    }
+  }
+
+  &__dot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background-color: var(--offline);
+
+    &--ok {
+      background-color: var(--ok);
+    }
+
+    &--caution {
+      background-color: var(--caution);
+    }
+
+    &--critical {
+      background-color: var(--critical);
+      box-shadow: 0 0 8px var(--critical);
+    }
+  }
+
+  &__optionText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__optionName {
+    @include t.label-md;
+
+    color: var(--text-strong);
+  }
+
+  &__optionMeta {
+    @include t.caption;
+
+    color: var(--text-muted);
+  }
+}

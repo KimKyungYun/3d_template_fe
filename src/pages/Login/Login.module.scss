@@ -1,0 +1,28 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/utils/media" as media;
+@use "@/styles/utils/mixins" as mx;
+
+.login {
+  position: relative;
+  min-height: 100dvh;
+
+  &__layout {
+    @include mx.pass-through;
+
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: s.$space-8;
+    min-height: 100dvh;
+    padding: s.$space-10 clamp(24px, 6vw, 96px);
+
+    @include media.tablet {
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-end;
+      gap: s.$space-6;
+      padding: s.$space-6 s.$space-4;
+    }
+  }
+}

@@ -1,0 +1,37 @@
+// 반응형 브레이크포인트
+// Desktop : 901px 이상 (기본) · Tablet : 900px 이하 · Mobile : 600px 이하
+
+$bp-mobile: 600px;
+$bp-tablet: 900px;
+$bp-compact: 1366px;
+
+@mixin mobile {
+  @media (width <= $bp-mobile) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (width <= $bp-tablet) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (width > $bp-tablet) {
+    @content;
+  }
+}
+
+// 1280×720 같은 발표·노트북 화면 — HUD 패널을 좁히고 여백을 줄인다
+@mixin compact {
+  @media (width <= $bp-compact), (height <= 760px) {
+    @content;
+  }
+}
+
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}

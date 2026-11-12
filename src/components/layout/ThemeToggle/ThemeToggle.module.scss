@@ -1,0 +1,24 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/utils/mixins" as mx;
+
+.toggle {
+  @include mx.press(0.92);
+
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: s.$radius-sm;
+  color: var(--text-muted);
+  transition: color 0.16s ease, background-color 0.16s ease;
+
+  &:hover {
+    background-color: var(--surface-hover);
+    color: var(--solar);
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+  }
+}

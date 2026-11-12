@@ -1,0 +1,74 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/utils/media" as media;
+@use "@/styles/utils/mixins" as mx;
+
+.panel {
+  width: 100%;
+  max-width: 720px;
+}
+
+.briefing {
+  display: flex;
+  align-items: center;
+  gap: s.$space-5;
+  padding-top: s.$space-3;
+
+  @include media.compact {
+    gap: s.$space-3;
+  }
+
+  &__text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__sentence {
+    @include t.title-sm;
+    @include mx.truncate;
+
+    color: var(--text-strong);
+  }
+
+  &__scan {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    align-items: flex-end;
+    gap: 6px;
+    width: 140px;
+
+    &[data-phase="scanning"] {
+      color: var(--accent);
+    }
+
+    @include media.compact {
+      width: 110px;
+    }
+  }
+
+  &__scanLabel {
+    @include t.eyebrow;
+
+    color: inherit;
+  }
+
+  &__bar {
+    position: relative;
+    width: 100%;
+    height: 2px;
+    overflow: hidden;
+    background-color: var(--line);
+  }
+
+  &__fill {
+    position: absolute;
+    inset: 0;
+    background-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    transform-origin: left;
+  }
+}

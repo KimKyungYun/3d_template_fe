@@ -1,0 +1,195 @@
+name: Cursor Auto Fix
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  auto-fix:
+    name: Cursor Auto Fix
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'Auto Fix'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Enable Corepack and install dependencies
+        run: |
+          corepack enable
+          yarn install
+
+      - name: Install Cursor CLI
+        run: |
+          curl https://cursor.com/install -fsS | bash
+          echo "$HOME/.cursor/bin" >> $GITHUB_PATH
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create fix branch
+        id: branch
+        run: |
+          BRANCH_NAME="fix/issue-${{ github.event.issue.number }}/AI-Auto-Fix"
+          git checkout -b "$BRANCH_NAME"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Run Cursor agent to fix issue
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          agent --force --output-format=text --print \
+            "Fix the following GitHub issue in this codebase.
+
+            Issue #${ISSUE_NUMBER}: ${ISSUE_TITLE}
+
+            Description:
+            ${ISSUE_BODY}
+
+            Before starting, read the full project conventions from .claude/CLAUDE.md.
+
+            Instructions:
+            - Read the issue carefully and identify the root cause. Identify the minimal set of files that must change.
+            - Prefer editing existing modules/components/hooks instead of creating new ones, unless strictly necessary.
+            - Actually modify the code to fix the issue. Unless it is truly impossible to fix safely with the given information, you MUST change at least one file in this repository.
+            - After editing, run appropriate commands when helpful (for example, yarn lint or targeted tests) and fix any obvious errors you introduced.
+            - At the end of your run, print a short summary of the concrete code changes you made (file paths and a one-line description each).
+
+            When you HAVE made code changes, you MUST create exactly three files in the repository root (these are gitignored and used by CI):
+            1. .cursor_commit_msg — Single line, Conventional Commits format (e.g. \"fix: add null check for userName in header\"). Use type fix/feat/refactor etc. and a concise Korean or English message.
+            2. .cursor_pr_summary.md — 진행 내용 요약 in Markdown: what was changed, which files, and a short bullet summary for reviewers.
+            3. .cursor_pr_why.md — 변경 이유 (Why) in Markdown: why this change was needed and how it addresses the issue.
+
+            When you cannot safely fix the issue:
+            - If you truly cannot fix the issue because the description is incomplete or ambiguous, DO NOT make speculative changes.
+            - In that case, do not modify any files. Instead, clearly print a short explanation starting with NO_CHANGES_MADE: followed by what extra information you would need from the issue author.
+
+            Project Conventions (MUST follow):
+            - Tech stack: React 19, TypeScript, Vite, SCSS (CSS Modules), Zustand, TanStack React Query, React Hook Form + Zod, Axios
+            - Component pattern: Container/Presentational - main pages (pages/**) only compose child components, no hooks or logic allowed in page index files
+            - Naming: constants in SCREAMING_SNAKE_CASE, variables/functions in camelCase
+            - Styling: SCSS with BEM naming (.block__element--modifier), use CSS Modules (*.module.scss)
+            - Folder structure: components/, pages/, hooks/, stores/, service/, queries/, utils/, constants/, interface/, schema/
+            - Before adding a new package, check package.json first and reuse existing dependencies if possible
+
+            Package Manager Rules (IMPORTANT):
+            - This project uses yarn (yarn berry, v4) as the package manager
+            - NEVER use npm or npx commands (npm install, npm run, npx, etc.)
+            - Always use yarn commands: yarn add, yarn remove, yarn dlx, yarn run
+            - To add a dependency: yarn add <package>
+            - To add a dev dependency: yarn add -D <package>
+            - To run scripts: yarn <script-name>"
+
+      - name: Commit changes
+        id: commit
+        run: |
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes made by Cursor agent"
+          else
+            git add -A
+            if [ -f .cursor_commit_msg ]; then
+              COMMIT_MSG=$(cat .cursor_commit_msg)
+            else
+              COMMIT_MSG="fix: resolve issue #${{ github.event.issue.number }} - ${{ github.event.issue.title }}"
+            fi
+            git commit -m "$COMMIT_MSG"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push branch
+        if: steps.commit.outputs.changed == 'true'
+        run: git push origin "${{ steps.branch.outputs.branch_name }}"
+
+      - name: Create Pull Request
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE_NUM="${{ github.event.issue.number }}"
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          if [ -f .cursor_pr_summary.md ]; then
+            PR_SUMMARY=$(cat .cursor_pr_summary.md)
+          else
+            PR_SUMMARY=$'- 자동 수정: Cursor AI가 issue #'"${ISSUE_NUM}"$' 을(를) 기반으로 코드 변경\n- 자세한 변경 내용은 파일 변경 탭을 참고해주세요.'
+          fi
+          if [ -f .cursor_pr_why.md ]; then
+            PR_WHY=$(cat .cursor_pr_why.md)
+          else
+            PR_WHY="자동 수정 이슈: ${ISSUE_TITLE}"
+          fi
+          {
+            echo "## 🔗 관련 이슈 (Closes)"
+            echo "closes #${ISSUE_NUM}"
+            echo ""
+            echo "## ✅ 체크리스트"
+            echo ""
+            echo "### 공통"
+            echo "- [ ] \`yarn lint\` 실행 시 에러가 발생하지 않았는가?"
+            echo "- [ ] \`master\`가 아닌 \`develop\` 브랜치로 머지되도록 설정했는가?"
+            echo "- [ ] 커밋 메시지 컨벤션이 지켜졌는가?"
+            echo "- [ ] 최신 \`develop\` 브랜치 내용을 반영했는가?"
+            echo "- [ ] \`null / undefined\` 대응을 완료했는가?"
+            echo "- [ ] 예외 상황에서도 화면이 깨지지 않는가?"
+            echo ""
+            echo "---"
+            echo ""
+            echo "## 🚀 배포 시 체크"
+            echo ""
+            echo "### 안정성"
+            echo "- [ ] 에러 케이스를 고려했는가?"
+            echo "- [ ] 운영 API 환경에서도 에러 없이 동작하는가?"
+            echo ""
+            echo "### 테스트"
+            echo "- [ ] 테스트 코드를 실행했을 때 모두 통과했는가?"
+            echo "- [ ] 신규 페이지/로직에 테스트를 추가했는가? (또는 사유 명시)"
+            echo "- [ ] 로컬 환경에서 직접 동작을 확인했는가?"
+            echo ""
+            echo "---"
+            echo ""
+            echo "## 📝 진행 내용 요약"
+            echo "$PR_SUMMARY"
+            echo ""
+            echo "---"
+            echo ""
+            echo "## 📌 변경 이유 (Why)"
+            echo "$PR_WHY"
+            echo ""
+            echo "## ⚠️ 영향 범위 (Impact)"
+            echo "- [x] FE"
+            echo "- [ ] BE"
+            echo "- [ ] Infra"
+            echo "- [ ] Docs"
+            echo ""
+            echo "## 🔥 리뷰시 주의사항"
+            echo "- 자동으로 생성된 변경 사항이므로, 핵심 비즈니스 로직과 사이드 이펙트를 중심으로 검토해주세요."
+          } > pr_body.md
+          gh pr create \
+            --title "${ISSUE_TITLE} - issue #${ISSUE_NUM}" \
+            --body-file pr_body.md \
+            --base develop \
+            --head "${{ steps.branch.outputs.branch_name }}"
+
+      - name: Comment on issue if no changes
+        if: steps.commit.outputs.changed == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
+            --body "⚠️ Cursor agent ran but made no changes. Please review the issue description and ensure it contains enough detail for automated fixing."

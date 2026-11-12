@@ -1,0 +1,68 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/utils/mixins" as mx;
+@use "@/styles/utils/media" as media;
+
+.panel {
+  width: 100%;
+  max-width: 640px;
+}
+
+.filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: s.$space-3;
+  padding-top: s.$space-3;
+
+  &__date {
+    display: flex;
+    align-items: center;
+    gap: s.$space-1;
+  }
+
+  &__step {
+    @include mx.press(0.9);
+
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: s.$radius-xs;
+    color: var(--text-muted);
+
+    &:hover:not(:disabled) {
+      background-color: var(--surface-hover);
+      color: var(--accent);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.35;
+    }
+  }
+
+  &__range {
+    @include t.data-md;
+
+    min-width: 112px;
+    color: var(--text-strong);
+    text-align: center;
+    transition: opacity 0.2s ease;
+
+    &[data-loading] {
+      opacity: 0.55;
+    }
+  }
+
+  &__hint {
+    @include t.caption;
+
+    color: var(--text-muted);
+
+    @include media.compact {
+      display: none;
+    }
+  }
+}

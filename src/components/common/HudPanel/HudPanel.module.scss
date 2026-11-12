@@ -1,0 +1,40 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/patterns/hud" as hud;
+
+.panel {
+  @include hud.hud-panel;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  &__head {
+    @include hud.hud-head;
+  }
+
+  // 영어 코드 라벨을 빼고 그 자리만큼 제목을 키웠다
+  &__title {
+    @include t.title-md;
+
+    min-width: 0;
+    color: var(--text-strong);
+  }
+
+  &__action {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: s.$space-1;
+  }
+
+  &__body {
+    flex: 1;
+    min-height: 0;
+    padding: 0 s.$space-4 s.$space-4;
+
+    &--flush {
+      padding: 0;
+    }
+  }
+}

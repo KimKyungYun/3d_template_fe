@@ -1,0 +1,17 @@
+@use "@/styles/patterns/stats-columns" as cols;
+
+.inverter {
+  &__left {
+    @include cols.left-column;
+
+    overflow-y: auto;
+  }
+
+  &__center {
+    @include cols.center-column;
+  }
+
+  &__right {
+    @include cols.right-column;
+  }
+}

@@ -1,0 +1,161 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+
+.photo {
+  display: flex;
+  flex-direction: column;
+  gap: s.$space-2;
+  margin: 0;
+
+  &__frame {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: s.$radius-xs;
+    background-color: var(--surface-sunken);
+  }
+
+  &__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    user-select: none;
+  }
+
+  &__spot {
+    @include t.data-sm;
+
+    --tone: var(--accent);
+
+    position: absolute;
+    display: grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 4px;
+    border: 1.5px solid var(--tone);
+    border-radius: s.$radius-full;
+    background-color: color-mix(in srgb, #060b13 70%, transparent);
+    color: #fff;
+    font-size: 0.625rem;
+    font-weight: 600;
+    transform: translate(-50%, -50%);
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+
+    &:hover {
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 35%, transparent);
+    }
+
+    // 눌림 반응도 가운데 맞춤(translate)을 지킨 채 줄인다 — scale 만 쓰면 점이 아래로 튄다
+    &:active {
+      transform: translate(-50%, -50%) scale(0.88);
+    }
+
+    &--neutral {
+      --tone: rgb(255 255 255 / 70%);
+    }
+
+    &--ok {
+      --tone: var(--ok);
+    }
+
+    &--caution {
+      --tone: var(--caution);
+
+      animation: spot-pulse 1.4s ease-out infinite;
+    }
+
+    &--critical {
+      --tone: var(--critical);
+
+      background-color: var(--critical);
+      animation: spot-pulse 1.2s ease-out infinite;
+    }
+
+    &--offline {
+      --tone: var(--offline);
+
+      background-color: var(--offline);
+    }
+
+    &--active {
+      z-index: 1;
+      transform: translate(-50%, -50%) scale(1.25);
+      box-shadow: 0 0 0 3px var(--accent), 0 0 14px var(--accent);
+    }
+  }
+
+  &__dot {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: rgb(255 255 255 / 55%);
+    transform: translate(-50%, -50%);
+
+    &--caution {
+      background-color: var(--caution);
+    }
+
+    &--critical {
+      background-color: var(--critical);
+      box-shadow: 0 0 6px var(--critical);
+    }
+
+    &--offline {
+      background-color: var(--offline);
+    }
+  }
+
+  &__caption {
+    --tone: var(--accent);
+
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: s.$space-2 s.$space-3;
+    border-left: 2px solid var(--tone);
+    border-radius: 0 s.$radius-xs s.$radius-xs 0;
+    background-color: color-mix(in srgb, var(--tone) 10%, transparent);
+
+    strong {
+      @include t.label-md;
+
+      color: var(--text-strong);
+    }
+
+    span {
+      @include t.body-sm;
+
+      color: var(--text);
+    }
+
+    &--critical {
+      --tone: var(--critical);
+    }
+
+    &--caution {
+      --tone: var(--caution);
+    }
+
+    &--offline {
+      --tone: var(--offline);
+    }
+  }
+
+  &__note {
+    @include t.caption;
+
+    color: var(--text-faint);
+  }
+}
+
+@keyframes spot-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--tone) 70%, transparent);
+  }
+
+  100% {
+    box-shadow: 0 0 0 9px transparent;
+  }
+}

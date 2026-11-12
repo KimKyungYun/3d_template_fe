@@ -1,0 +1,114 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+
+.panel {
+  flex: 1;
+  min-height: 0;
+}
+
+.matrix {
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  padding: 0 s.$space-3 s.$space-3;
+
+  &__skeleton {
+    padding: 0 s.$space-3 s.$space-3;
+  }
+
+  &__head,
+  &__row {
+    display: grid;
+    grid-template-columns: 40px repeat(14, minmax(0, 1fr));
+    align-items: center;
+    gap: 2px;
+  }
+
+  &__head {
+    padding: 0 0 4px;
+  }
+
+  &__date {
+    @include t.data-sm;
+
+    color: var(--text-faint);
+    font-size: 0.5625rem;
+    text-align: center;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  &__row {
+    width: 100%;
+    padding: 1px 0;
+    border-radius: s.$radius-xs;
+
+    &:hover {
+      background-color: var(--surface-hover);
+    }
+  }
+
+  &__row:hover &__cell {
+    outline: 1px solid color-mix(in srgb, var(--text-strong) 25%, transparent);
+  }
+
+  &__name {
+    @include t.data-sm;
+
+    color: var(--text);
+    font-size: 0.6875rem;
+    text-align: left;
+  }
+
+  &__cell,
+  &__swatch {
+    position: relative;
+    display: grid;
+    place-items: center;
+    height: 14px;
+    border-radius: 2px;
+
+    &[data-empty] {
+      background: repeating-linear-gradient(-45deg, var(--offline-soft) 0 3px, transparent 3px 6px);
+      box-shadow: inset 0 0 0 1px var(--offline-soft);
+    }
+  }
+
+  &__swatch {
+    display: inline-block;
+    width: 12px;
+    height: 10px;
+    vertical-align: middle;
+  }
+
+  &__dot {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: var(--text-on-accent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--text-strong) 60%, transparent);
+  }
+
+  &__legend {
+    @include t.caption;
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px s.$space-3;
+    padding-top: s.$space-2;
+    color: var(--text-muted);
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+  }
+}

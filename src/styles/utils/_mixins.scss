@@ -1,0 +1,93 @@
+@use "../tokens/spacing" as s;
+@use "../tokens/typography" as t;
+
+// 스크린리더 전용
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/*
+  키보드로 다닐 때만 켜지는 포커스 표시.
+  outline 은 전역 규칙이 포인터 입력에서 꺼 주지만, 테두리·그림자로 포커스를 그리는 자리는 스스로 꺼야 한다.
+*/
+@mixin keyboard-focus {
+  :root[data-input="keyboard"] &:focus-visible {
+    @content;
+  }
+}
+
+// 누르는 순간에만 도는 눌림 반응. 움직임을 줄이기로 한 환경에서는 크기를 건드리지 않는다.
+@mixin press($scale: 0.96) {
+  &:active:not(:disabled) {
+    transform: scale($scale);
+    transition: transform 0.07s ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &:active:not(:disabled) {
+      transform: none;
+    }
+  }
+}
+
+// 폼 입력칸 상자 — 높이·모서리·글자를 한곳에서 정한다
+@mixin control-box {
+  @include t.body-md;
+
+  width: 100%;
+  min-height: s.$control-height;
+  padding: s.$space-2 s.$space-3;
+  border: 1px solid var(--line-strong);
+  border-radius: s.$radius-sm;
+  background-color: var(--surface-sunken);
+  color: var(--text-strong);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+
+  &::placeholder {
+    color: var(--text-faint);
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent-line);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: var(--shadow-focus);
+  }
+
+  &[aria-invalid="true"] {
+    border-color: var(--critical);
+  }
+}
+
+@mixin truncate($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+  }
+}
+
+// 3D 위로 올라오는 오버레이는 기본으로 클릭을 통과시키고, 안의 패널만 받는다
+@mixin pass-through {
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
+}

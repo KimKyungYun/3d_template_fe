@@ -1,0 +1,110 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/utils/media" as media;
+@use "@/styles/utils/mixins" as mx;
+
+.home {
+  // 나침반은 오른쪽 기둥 바로 왼쪽, 스캔 알림은 브리핑 띠 아래에 둔다
+  --compass-top: 96px;
+  --compass-right: calc(340px + #{s.$hud-gap} * 2);
+  --toast-top: 96px;
+
+  position: absolute;
+  inset: 0;
+
+  @include media.compact {
+    --compass-top: 88px;
+    --compass-right: calc(300px + #{s.$space-3} * 2);
+    --toast-top: 88px;
+  }
+
+  @include media.mobile {
+    // 아래 58% 는 정보창이 쓰므로 캔버스는 위쪽 칸에만 그린다
+    --stage-canvas-bottom: 58%;
+    --compass-top: #{s.$space-3};
+    --compass-right: #{s.$space-3};
+    --toast-top: #{s.$space-3};
+  }
+
+  // 3D 위에 뜨는 HUD 층 — 스테이지 루트 안에 있어야 카드·카메라가 패널을 피한다
+  &__overlay {
+    position: absolute;
+    inset: 0;
+
+    // 3D 이름표·카드(z 2~4)보다 위 — 가운데 띠를 이름표가 덮지 않게. 나침반(5)·스캔 알림(6)은 그 위
+    z-index: 5;
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr) 340px;
+    gap: s.$hud-gap;
+    padding: s.$hud-gap;
+    pointer-events: none;
+
+    @include media.compact {
+      grid-template-columns: 252px minmax(0, 1fr) 300px;
+      gap: s.$space-3;
+      padding: s.$space-3;
+    }
+
+    @include media.tablet {
+      grid-template-columns: minmax(0, 1fr) 300px;
+    }
+
+    // 휴대폰 — 위쪽은 3D 를 만지게 비워 두고, 아래에 패널을 쌓아 스크롤한다
+    @include media.mobile {
+      top: 42%;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      pointer-events: auto;
+    }
+  }
+
+  &__left,
+  &__right {
+    @include mx.pass-through;
+
+    display: flex;
+    flex-direction: column;
+    gap: s.$space-3;
+    min-height: 0;
+
+    @include media.mobile {
+      flex: none;
+    }
+  }
+
+  &__left {
+    @include media.tablet {
+      display: none;
+    }
+
+    @include media.mobile {
+      display: flex;
+    }
+  }
+
+  &__right {
+    @include media.mobile {
+      order: -1;
+    }
+  }
+
+  // 가운데 — 위 브리핑, 아래 발전 곡선. 사이는 비워 3D 를 만지게 둔다
+  &__center {
+    @include mx.pass-through;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+
+    @include media.tablet {
+      display: none;
+    }
+
+    @include media.mobile {
+      display: flex;
+      gap: s.$space-3;
+    }
+  }
+}

@@ -1,0 +1,32 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/utils/mixins" as mx;
+
+// 나침반(68px) 바로 아래 — 위치는 나침반과 같은 페이지 변수(--compass-top·--compass-right)를 따른다
+.reset {
+  @include t.label-sm;
+  @include mx.press(0.95);
+
+  position: absolute;
+  top: calc(var(--compass-top, #{s.$space-3}) + 68px + #{s.$space-2});
+  right: var(--compass-right, #{s.$space-3});
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 s.$space-3;
+  border: 1px solid var(--line-strong);
+  border-radius: s.$radius-full;
+  background: var(--glass-strong);
+  box-shadow: var(--shadow-md);
+  color: var(--text);
+  white-space: nowrap;
+  backdrop-filter: blur(var(--glass-blur));
+  transition: border-color 0.16s ease, color 0.16s ease;
+
+  &:hover {
+    border-color: var(--accent-line);
+    color: var(--accent);
+  }
+}

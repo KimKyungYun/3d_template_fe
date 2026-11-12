@@ -1,0 +1,79 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/utils/mixins" as mx;
+
+.panel {
+  width: 100%;
+  max-width: 680px;
+}
+
+.banner {
+  --tone: var(--accent);
+
+  display: flex;
+  align-items: center;
+  gap: s.$space-3;
+  padding-top: s.$space-3;
+
+  &[data-tone="critical"] {
+    --tone: var(--critical);
+  }
+
+  &[data-tone="caution"] {
+    --tone: var(--caution);
+  }
+
+  &[data-tone="offline"] {
+    --tone: var(--offline);
+  }
+
+  &__icon {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid color-mix(in srgb, var(--tone) 50%, transparent);
+    border-radius: s.$radius-sm;
+    background-color: color-mix(in srgb, var(--tone) 14%, transparent);
+    color: var(--tone);
+    animation: banner-pulse 1.8s ease-out infinite;
+  }
+
+  &__text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__label {
+    @include t.label-sm;
+
+    color: var(--tone);
+  }
+
+  &__title {
+    @include t.label-md;
+    @include mx.truncate;
+
+    color: var(--text-strong);
+  }
+
+  &__sub {
+    @include t.caption;
+
+    color: var(--text-muted);
+  }
+}
+
+@keyframes banner-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--tone) 50%, transparent);
+  }
+
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}

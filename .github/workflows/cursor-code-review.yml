@@ -1,0 +1,283 @@
+name: Code Review
+# test commit
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  pull-requests: write
+  contents: read
+  issues: write
+  packages: read
+
+jobs:
+  code-review:
+    name: Code Review
+    runs-on: ubuntu-latest
+    # PR open/synchronize/reopened, 또는 PR 코멘트가 "/review" 로 시작하는 경우에만 실행 (Dependabot PR 제외)
+    if: >
+      github.actor != 'dependabot[bot]' && (
+        (github.event_name == 'pull_request' &&
+          github.event.pull_request.draft == false) ||
+        (github.event_name == 'issue_comment' &&
+          github.event.issue.pull_request.url != '' &&
+          startsWith(github.event.comment.body, '/review'))
+      )
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BLOCKING_REVIEW: ${{ vars.BLOCKING_REVIEW || 'false' }}
+    steps:
+      - name: Resolve PR context
+        id: pr
+
+        run: |
+          set -uo pipefail
+
+          PR_NUMBER="${{ github.event.pull_request.number || github.event.issue.number }}"
+          echo "Resolved PR_NUMBER: $PR_NUMBER"
+
+          if [[ -z "$PR_NUMBER" ]]; then
+            echo "::error::PR_NUMBER is empty — cannot resolve PR context." >&2
+            exit 1
+          fi
+
+          echo "Calling gh api for PR $PR_NUMBER..."
+          if ! PR_JSON=$(gh api repos/${{ github.repository }}/pulls/"$PR_NUMBER" 2>&1); then
+            echo "::error::gh api call failed: $PR_JSON" >&2
+            exit 1
+          fi
+
+          HEAD_SHA=$(echo "$PR_JSON" | jq -r '.head.sha // empty')
+          BASE_SHA=$(echo "$PR_JSON" | jq -r '.base.sha // empty')
+          IS_DRAFT=$(echo "$PR_JSON" | jq -r '.draft // "false"')
+
+          echo "HEAD_SHA=$HEAD_SHA"
+          echo "BASE_SHA=$BASE_SHA"
+          echo "IS_DRAFT=$IS_DRAFT"
+
+          if [[ -z "$HEAD_SHA" ]]; then
+            echo "::error::Failed to extract head.sha from PR $PR_NUMBER. API response:" >&2
+            echo "$PR_JSON" >&2
+            exit 1
+          fi
+          if [[ -z "$BASE_SHA" ]]; then
+            echo "::error::Failed to extract base.sha from PR $PR_NUMBER." >&2
+            exit 1
+          fi
+
+          if [[ "$IS_DRAFT" == "true" ]]; then
+            echo "::notice::PR $PR_NUMBER is a draft — skipping code review." >&2
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "base_sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout repository
+        if: steps.pr.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.pr.outputs.head_sha }}
+
+      - name: Setup Node
+        if: steps.pr.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable Corepack
+        if: steps.pr.outputs.skip != 'true'
+        run: corepack enable
+
+      - name: Install dependencies
+        if: steps.pr.outputs.skip != 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: yarn install --immutable
+
+      - name: Install Cursor CLI # review:ignore - 공급망 공격 위험 인지 및 수용
+        if: steps.pr.outputs.skip != 'true'
+        run: |
+          curl https://cursor.com/install -fsS | bash
+          echo "$HOME/.cursor/bin" >> $GITHUB_PATH
+
+      - name: Configure git identity
+        if: steps.pr.outputs.skip != 'true'
+        run: |
+          git config user.name "Cursor Agent"
+          git config user.email "cursoragent@cursor.com"
+
+      - name: Perform automated code review
+        if: steps.pr.outputs.skip != 'true'
+        id: review
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          MODEL: auto
+          REVIEW_PROMPT: |
+            ⚠️ CRITICAL LANGUAGE RULE — HIGHEST PRIORITY, NON-NEGOTIABLE:
+            Every single word you write in any comment, summary, or reply MUST be written in Korean (한국어).
+            This rule overrides everything else. No exceptions. No English text of any kind in the output.
+            If you find yourself writing English, STOP and rewrite in Korean immediately.
+
+            You are operating in a GitHub Actions runner performing automated code review. The gh CLI is available and authenticated via GH_TOKEN. You may comment on pull requests.
+
+            Context:
+            - Repo: ${{ github.repository }}
+            - PR Number: ${{ steps.pr.outputs.number }}
+            - PR Head SHA: ${{ steps.pr.outputs.head_sha }}
+            - PR Base SHA: ${{ steps.pr.outputs.base_sha }}
+            - Blocking Review: ${{ env.BLOCKING_REVIEW }}
+
+            Objectives:
+            1) Re-check existing review comments and reply resolved when addressed.
+            2) Review the current PR diff and flag only clear, high-severity issues.
+            3) Leave very short inline comments (1-2 sentences) on changed lines only and a brief summary at the end.
+
+            Procedure:
+            - Get existing comments: gh pr view ${{ steps.pr.outputs.number }} --json comments
+            - Get diff: gh pr diff ${{ steps.pr.outputs.number }}
+            - Get changed files with patches to compute inline positions: gh api repos/${{ github.repository }}/pulls/${{ steps.pr.outputs.number }}/files --paginate --jq '.[] | {filename,patch}'
+            - Compute exact inline anchors for each issue (file path + diff position). Comments MUST be placed inline on the changed line in the diff, not as top-level comments.
+            - Detect prior top-level "no issues" style comments authored by this bot (match bodies like: "✅ no issues", "No issues found", "LGTM").
+            - If CURRENT run finds issues and any prior "no issues" comments exist:
+              - Prefer to remove them to avoid confusion:
+                - Try deleting top-level issue comments via: gh api -X DELETE repos/${{ github.repository }}/issues/comments/<comment_id>
+                - If deletion is not possible, minimize them via GraphQL (minimizeComment) or edit to prefix "[Superseded by new findings]".
+              - If neither delete nor minimize is possible, reply to that comment: "⚠️ Superseded: issues were found in newer commits".
+            - If a previously reported issue appears fixed by nearby changes, reply: ✅ This issue appears to be resolved by the recent changes
+            - Analyze ONLY for:
+              - Null/undefined dereferences
+              - Resource leaks (unclosed files or connections)
+              - Injection (SQL/XSS)
+              - Concurrency/race conditions
+              - Missing error handling for critical operations
+              - Obvious logic errors with incorrect behavior
+              - Clear performance anti-patterns with measurable impact
+              - Definitive security vulnerabilities
+            - Avoid duplicates: skip if similar feedback already exists on or near the same lines.
+            - Skip any line or step containing the marker `review:ignore` — do not comment on it under any circumstances.
+
+            Commenting rules:
+            - LANGUAGE: 모든 코멘트, 요약, 답글은 반드시 한국어로 작성한다. 영어 사용 절대 금지.
+            - Max 10 inline comments total; prioritize the most critical issues
+            - One issue per comment; place on the exact changed line
+            - All issue comments MUST be inline (anchored to a file and line/position in the PR diff)
+            - Natural tone, specific and actionable; do not mention automated or high-confidence
+            - Use emojis: 🚨 치명적 🔒 보안 ⚡ 성능 ⚠️ 로직 ✅ 해결됨 ✨ 개선
+
+            Suggested fix format:
+            - Whenever a concrete and safe fix can be proposed for an issue, append a collapsible "수정 제안 diff" block at the BOTTOM of that inline comment body.
+            - Use the following EXACT template. The `<details>` block must be the last element of the comment body, separated from the explanation by a blank line:
+
+              <details>
+              <summary>수정 제안 diff</summary>
+
+              ```diff
+              - <파일의 실제 기존 코드 라인>
+              + <수정 제안 코드 라인>
+              ```
+
+              </details>
+
+            - Diff rules:
+              - Replace EVERY placeholder (e.g., `<파일의 실제 기존 코드 라인>`) with real code taken verbatim from the file at the commented line. Never leave placeholder text in the final comment.
+              - Include only the minimal lines that change; optionally add 1~2 surrounding context lines (no `-`/`+` prefix) if they are essential for understanding the change.
+              - Preserve original indentation, quotes, and trailing characters exactly as they appear in the source file.
+              - Use `-` for removed lines and `+` for added lines. Do NOT use any other prefix.
+              - Keep the fix narrowly focused on the specific issue raised in the comment; do not bundle unrelated refactors.
+              - If no clear and safe fix can be proposed (e.g., the problem requires broader discussion or external context), OMIT the diff block entirely instead of guessing.
+              - When building the JSON for the Reviews API, ensure the diff fences and `<details>` tags survive JSON escaping (newlines become `\n`, backticks are preserved as-is).
+
+            Submission:
+            - If there are NO issues to report and an existing top-level comment indicating "no issues" already exists (e.g., "✅ no issues", "No issues found", "LGTM"), do NOT submit another comment. Skip submission to avoid redundancy.
+            - If there are NO issues to report and NO prior "no issues" comment exists, submit one brief summary comment noting no issues.
+            - If there ARE issues to report and a prior "no issues" comment exists, ensure that prior comment is deleted/minimized/marked as superseded before submitting the new review.
+            - If there ARE issues to report, submit ONE review containing ONLY inline comments plus an optional concise summary body. Use the GitHub Reviews API to ensure comments are inline:
+              - Build a JSON array of comments like: [{ "path": "<file>", "position": <diff_position>, "body": "..." }]
+              - Submit via: gh api repos/${{ github.repository }}/pulls/${{ steps.pr.outputs.number }}/reviews -f event=COMMENT -f body="$SUMMARY" -f comments='[$COMMENTS_JSON]'
+            - Do NOT use: gh pr review --approve or --request-changes
+
+            Blocking behavior:
+            - If BLOCKING_REVIEW is true and any 🚨 or 🔒 issues were posted: echo "CRITICAL_ISSUES_FOUND=true" >> $GITHUB_ENV
+            - Otherwise: echo "CRITICAL_ISSUES_FOUND=false" >> $GITHUB_ENV
+            - Always set CRITICAL_ISSUES_FOUND at the end
+
+            최종 확인: 제출 전에 모든 코멘트가 한국어로 작성되었는지 반드시 검토한다. 영어가 포함된 문장이 있으면 한국어로 재작성한 후 제출한다.
+        run: |
+          MAX_ATTEMPTS=3
+          ATTEMPT=0
+          SUCCESS=false
+
+          until [ $ATTEMPT -ge $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "::notice::코드 리뷰 실행 중... (시도 $ATTEMPT/$MAX_ATTEMPTS)"
+
+            # stdout/stderr 를 파일로 캡처하면서 콘솔에도 출력
+            agent --force --model "$MODEL" --output-format=text --print "$REVIEW_PROMPT" \
+              2>&1 | tee /tmp/agent-output.txt
+            AGENT_EXIT=${PIPESTATUS[0]}
+
+            # exit code가 0이어도 resource_exhausted 출력이 있고
+            # 실제 리뷰 결과가 없으면 실패로 간주
+            if grep -qE "resource_exhausted" /tmp/agent-output.txt \
+               && ! grep -qE "CRITICAL_ISSUES_FOUND" /tmp/agent-output.txt; then
+              echo "::warning::resource_exhausted 감지 — 실제 리뷰 결과 없음 (exit: $AGENT_EXIT)"
+              AGENT_EXIT=1
+            fi
+
+            if [ "$AGENT_EXIT" -eq 0 ]; then
+              SUCCESS=true
+              break
+            fi
+
+            echo "::warning::에이전트 종료 코드: $AGENT_EXIT"
+
+            if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+              WAIT=$((ATTEMPT * 30))
+              echo "::warning::재시도 대기 중... ${WAIT}초 후 재시도합니다. (시도 $ATTEMPT/$MAX_ATTEMPTS 실패)"
+              sleep $WAIT
+            fi
+          done
+
+          if [ "$SUCCESS" = "false" ]; then
+            echo "::warning::${MAX_ATTEMPTS}번 시도 후 코드 리뷰를 완료하지 못했습니다."
+            echo "REVIEW_FAILED=true"  >> "$GITHUB_ENV"
+            # 리뷰 실패 시 blocking check 에서 값이 없어 우회되지 않도록 명시적으로 설정
+            echo "CRITICAL_ISSUES_FOUND=false" >> "$GITHUB_ENV"
+          else
+            echo "REVIEW_FAILED=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Notify review failure on PR
+        if: steps.pr.outputs.skip != 'true' && env.REVIEW_FAILED == 'true'
+        run: |
+          gh pr comment ${{ steps.pr.outputs.number }} --body \
+            "⚠️ **자동 코드 리뷰를 완료하지 못했습니다.**
+            Cursor API 요청 한도 초과 또는 일시적 연결 오류로 인해 리뷰가 실행되지 않았습니다.
+            PR 코멘트에 \`/review\` 를 입력하면 수동으로 재실행할 수 있습니다."
+
+      - name: Check blocking review results
+        if: env.BLOCKING_REVIEW == 'true' && steps.pr.outputs.skip != 'true'
+        run: |
+          echo "CRITICAL_ISSUES_FOUND : ${CRITICAL_ISSUES_FOUND:-unset}"
+          echo "REVIEW_FAILED         : ${REVIEW_FAILED:-unset}"
+
+          # 리뷰 자체가 실패한 경우 — 검증 우회 방지를 위해 차단
+          if [ "${REVIEW_FAILED:-false}" = "true" ]; then
+            echo "⚠️ 코드 리뷰 실행 실패 — 차단 모드에서는 안전을 위해 빌드를 실패 처리합니다."
+            exit 1
+          fi
+
+          if [ "${CRITICAL_ISSUES_FOUND:-false}" = "true" ]; then
+            echo "❌ 치명적 이슈 발견 — 빌드를 실패 처리합니다."
+            exit 1
+          fi
+
+          echo "✅ 차단 조건 없음."

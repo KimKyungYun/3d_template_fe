@@ -1,0 +1,156 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/utils/mixins" as mx;
+@use "@/styles/utils/media" as media;
+
+.panel {
+  width: 100%;
+  max-width: 640px;
+}
+
+.scrubber {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 150px;
+  align-items: end;
+  gap: s.$space-4;
+  padding-top: s.$space-3;
+
+  @include media.compact {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  &__controls {
+    display: flex;
+    flex-direction: column;
+    gap: s.$space-1;
+  }
+
+  &__play {
+    @include mx.press(0.9);
+
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--accent-line);
+    border-radius: 50%;
+    background-color: var(--accent-soft);
+    color: var(--accent);
+
+    &:hover:not(:disabled) {
+      box-shadow: var(--accent-glow);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+    }
+  }
+
+  &__all {
+    @include t.caption;
+
+    padding: 2px 6px;
+    border: 1px solid var(--line);
+    border-radius: s.$radius-full;
+    color: var(--text-muted);
+    white-space: nowrap;
+
+    &--active {
+      border-color: var(--accent-line);
+      color: var(--accent);
+    }
+  }
+
+  &__now {
+    @include t.data-sm;
+
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+
+  &__bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 56px;
+  }
+
+  &__bar {
+    position: relative;
+    display: flex;
+    flex: 1;
+    align-items: flex-end;
+    height: 100%;
+    min-width: 3px;
+
+    > span {
+      display: block;
+      width: 100%;
+      border-radius: 1px 1px 0 0;
+      background-color: var(--solar);
+      opacity: 0.38;
+      transition: opacity 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    &:hover:not(:disabled) > span {
+      opacity: 0.8;
+    }
+
+    &:disabled {
+      cursor: default;
+
+      > span {
+        background-color: var(--line-strong);
+      }
+    }
+
+    &--active > span {
+      opacity: 1;
+      box-shadow: 0 0 10px var(--solar);
+    }
+  }
+
+  &__legend {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    @include media.compact {
+      display: none;
+    }
+  }
+
+  &__legendTitle {
+    @include t.caption;
+
+    color: var(--text-muted);
+  }
+
+  &__gradient {
+    height: 6px;
+    border-radius: 3px;
+  }
+
+  &__ticks {
+    @include t.data-sm;
+
+    position: relative;
+    height: 12px;
+    color: var(--text-faint);
+    font-size: 0.5625rem;
+
+    > span {
+      position: absolute;
+      top: 0;
+      transform: translateX(-50%);
+
+      &:first-child {
+        transform: none;
+      }
+
+      &:last-child {
+        transform: translateX(-100%);
+      }
+    }
+  }
+}

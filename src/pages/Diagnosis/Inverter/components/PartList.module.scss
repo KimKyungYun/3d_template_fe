@@ -1,0 +1,57 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/utils/mixins" as mx;
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &__row {
+    @include mx.press(0.985);
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: s.$space-2;
+    width: 100%;
+    padding: 6px s.$space-2;
+    border: 1px solid transparent;
+    border-radius: s.$radius-xs;
+    text-align: left;
+
+    &:hover {
+      background-color: var(--surface-hover);
+    }
+
+    &--active {
+      border-color: var(--accent-line);
+      background-color: var(--accent-soft);
+    }
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__label {
+    @include t.label-md;
+
+    color: var(--text-strong);
+  }
+
+  &__meta {
+    @include t.caption;
+    @include mx.truncate;
+
+    color: var(--text-muted);
+  }
+
+  &__ok {
+    @include t.caption;
+
+    color: var(--text-faint);
+  }
+}

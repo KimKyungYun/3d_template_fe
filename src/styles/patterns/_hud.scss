@@ -1,0 +1,43 @@
+@use "../tokens/spacing" as s;
+@use "../tokens/typography" as t;
+
+/*
+  HUD 패널 골격 — 3D 스테이지 위에 뜨는 판.
+  반투명 유리 + 1px 헤어라인 + 네 모서리 꺾쇠. 꺾쇠는 배경 그라데이션 8개로 그려 요소를 늘리지 않는다.
+  CSS 모듈은 파일 사이에 클래스를 나눠 쓸 수 없어서 규칙 자체를 믹스인으로 공유한다.
+*/
+@mixin hud-panel($corner: 10px) {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: s.$radius-sm;
+  background:
+    linear-gradient(var(--accent-line), var(--accent-line)) top left / #{$corner} 1px no-repeat,
+    linear-gradient(var(--accent-line), var(--accent-line)) top left / 1px #{$corner} no-repeat,
+    linear-gradient(var(--accent-line), var(--accent-line)) top right / #{$corner} 1px no-repeat,
+    linear-gradient(var(--accent-line), var(--accent-line)) top right / 1px #{$corner} no-repeat,
+    linear-gradient(var(--accent-line), var(--accent-line)) bottom left / #{$corner} 1px no-repeat,
+    linear-gradient(var(--accent-line), var(--accent-line)) bottom left / 1px #{$corner} no-repeat,
+    linear-gradient(var(--accent-line), var(--accent-line)) bottom right / #{$corner} 1px no-repeat,
+    linear-gradient(var(--accent-line), var(--accent-line)) bottom right / 1px #{$corner} no-repeat,
+    var(--glass);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+}
+
+// 패널 머리 — 작은 코드 라벨(eyebrow) + 제목
+@mixin hud-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: s.$space-2;
+  padding: s.$space-3 s.$space-4 s.$space-2;
+}
+
+
+// 블루프린트 모눈 — 3D 가 없는 바탕(빈 상태·로딩)에 깐다
+@mixin blueprint-grid($size: 32px) {
+  background-image:
+    linear-gradient(var(--line-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-grid) 1px, transparent 1px);
+  background-size: $size $size;
+}

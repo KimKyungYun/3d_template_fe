@@ -1,0 +1,15 @@
+@use "@/styles/patterns/stats-columns" as cols;
+
+.plant {
+  &__left {
+    @include cols.left-column;
+  }
+
+  &__center {
+    @include cols.center-column;
+  }
+
+  &__right {
+    @include cols.right-column;
+  }
+}

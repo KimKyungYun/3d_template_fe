@@ -1,0 +1,52 @@
+// Primitive Tokens
+// 원시 색상 팔레트. 컴포넌트는 직접 쓰지 않고 semantic 토큰(var(--*))을 거쳐서만 쓴다.
+// 컨셉: "야간 관제실" — 짙은 남흑 바탕 위에 스캔 시안(조작·스캔)과 솔라 앰버(출력)를 얹는다.
+// 상태색은 3D 장면과 같은 값을 써야 하므로 `src/configs/status.ts` 와 한 쌍으로 고친다.
+
+// ── Abyss : 남흑 중립색 ─────────────────────────────────────
+$abyss-0: #fff;
+$abyss-5: #f3f6fa;
+$abyss-10: #e7edf4;
+$abyss-15: #dae2ec;
+$abyss-20: #c5d0de;
+$abyss-30: #a1b0c4;
+$abyss-40: #7b8ca5;
+$abyss-50: #5a6b84;
+$abyss-60: #415069;
+$abyss-70: #2a374d;
+$abyss-80: #172234;
+$abyss-85: #101a29;
+$abyss-90: #0b131f;
+$abyss-95: #060b13;
+
+// ── Scan : 조작·선택·스캔 빛 ────────────────────────────────
+$scan-10: #d6f8ff;
+$scan-30: #7eeaff;
+$scan-40: #3ee0ff;
+$scan-50: #13b8dd;
+$scan-60: #0a8fb3;
+$scan-70: #076c88;
+
+// ── Solar : 출력(kW)·발전 ───────────────────────────────────
+$solar-10: #fff1d6;
+$solar-30: #ffcf7a;
+$solar-40: #ffb547;
+$solar-50: #f29a1f;
+$solar-60: #d9822b;
+$solar-70: #9c5a12;
+
+// ── Panel : 실제 태양광 패널 파랑 (3D 와 같은 값) ──────────
+$panel-light: #1f4a9c;
+$panel-dark: #2f5bb3;
+
+// ── Status : 이상 3색 + 정상 ────────────────────────────────
+$critical-40: #ff4d5e;
+$critical-60: #d92c3e;
+$caution-40: #ff9d2e;
+$caution-60: #d9780a;
+$offline-40: #7a8699;
+$offline-60: #5b6577;
+$ok-40: #34d399;
+$ok-60: #0f9f6e;
+
+$shadow-color: 2 6 14;

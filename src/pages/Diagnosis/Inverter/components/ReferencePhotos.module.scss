@@ -1,0 +1,7 @@
+@use "@/styles/tokens/spacing" as s;
+
+.photos {
+  display: flex;
+  flex-direction: column;
+  gap: s.$space-2;
+}

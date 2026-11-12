@@ -1,0 +1,36 @@
+@use "@/styles/tokens/typography" as t;
+
+.readout {
+  &__dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background-color: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    vertical-align: middle;
+    animation: readout-blink 1.2s steps(2) infinite;
+  }
+
+  &__text {
+    @include t.eyebrow;
+
+    color: var(--accent);
+    vertical-align: middle;
+
+    &[data-phase="detect"] {
+      color: var(--critical);
+    }
+
+    &[data-phase="standby"] {
+      color: var(--text-muted);
+    }
+  }
+}
+
+@keyframes readout-blink {
+  50% {
+    opacity: 0.2;
+  }
+}

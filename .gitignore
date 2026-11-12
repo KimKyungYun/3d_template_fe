@@ -1,0 +1,39 @@
+# dependencies
+node_modules
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+.pnp.*
+
+# build
+dist
+dist-ssr
+*.local
+# 타입체크가 다시 돌 때마다 바뀌는 캐시라, 손대지 않아도 늘 수정된 것으로 뜬다
+*.tsbuildinfo
+
+# logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# env
+.env
+.env.*
+
+.omc

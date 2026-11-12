@@ -1,0 +1,109 @@
+name: PR Summary
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+  contents: read
+  issues: write
+
+jobs:
+  pr-summary:
+    name: PR Summary & Walkthrough
+    runs-on: ubuntu-latest
+    if: >
+      github.event.pull_request.draft == false &&
+      github.actor != 'dependabot[bot]'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Install Cursor CLI # review:ignore - 공급망 공격 위험 인지 및 수용
+        run: |
+          curl https://cursor.com/install -fsS | bash
+          echo "$HOME/.cursor/bin" >> $GITHUB_PATH
+
+      - name: Generate PR summary and walkthrough
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          MODEL: gpt-5.2
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SUMMARY_PROMPT: |
+            You are operating in a GitHub Actions runner. The gh CLI is available and authenticated via GH_TOKEN.
+            Your task is to post a single, well-structured PR summary comment for a newly opened pull request.
+
+            Context:
+            - Repo: ${{ github.repository }}
+            - PR Number: ${{ github.event.pull_request.number }}
+            - PR Title: ${{ github.event.pull_request.title }}
+            - PR Head SHA: ${{ github.event.pull_request.head.sha }}
+            - PR Base SHA: ${{ github.event.pull_request.base.sha }}
+
+            Procedure:
+            1. Retrieve the full diff: gh pr diff
+            2. Retrieve the list of changed files: gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files --paginate --jq '.[] | {filename, additions, deletions, patch}'
+            3. Analyze the changes thoroughly and compose a comment in the following format (write in Korean):
+
+            ---
+            <details>
+            <summary>📋 PR 변경사항 요약</summary>
+
+            이 PR이 무엇을/왜 변경하는지 2~4문장으로 간결하게 작성한다.
+
+            </details>
+
+            ---
+
+            <details>
+            <summary>🗺️ 변경사항 Walkthrough</summary>
+
+            변경된 파일별로 아래 표를 작성한다.
+
+            | 파일 | 변경 내용 |
+            |------|-----------|
+            | `실제/파일/경로.ts` | 실제 변경 내용 한 줄 요약 |
+
+            그런 다음, 주요 변경 흐름을 단계별로 설명한다:
+
+            **1단계 – 실제 단계 제목**
+            - 이 단계에서 일어나는 일을 1~2문장으로 설명한다.
+
+            **2단계 – 실제 단계 제목**
+            - ...
+
+            (변경 흐름에 맞게 단계 수를 조정한다)
+
+            </details>
+
+            ---
+
+            ## 🔀 시퀀스 다이어그램
+
+            변경된 코드의 호출 흐름, 데이터 흐름, 컴포넌트 간 상호작용을 담은 Mermaid sequenceDiagram 하나를 넣는다.
+            변경이 없는 부분은 다이어그램에 넣지 않는다.
+            다이어그램은 반드시 ```mermaid 코드 블록으로 감싼다.
+
+            ---
+
+            Rules:
+            - The entire comment MUST be written in Korean.
+            - The comment is read by human developers, NOT by an AI agent. Write as if you are the author explaining the PR to a human reviewer.
+            - STRICTLY FORBIDDEN in the comment body:
+              - Instruction-like phrases directed at an agent (e.g., "~해주세요", "~을 반영해주세요", "~을 작성해주세요", "~을 조정하세요", "~을 포함하지 마세요")
+              - Template placeholder text (e.g., "[단계 제목]", "<file>", "path/to/file.ts", "변경 내용 한 줄 요약")
+              - Any sentence that reads like a directive or instruction rather than an actual description
+              - Meta-commentary about how the comment was generated
+            - Replace every placeholder with actual content derived from the real diff.
+            - Submit the comment via: gh pr comment ${{ github.event.pull_request.number }} --body "<COMMENT>"
+            - Use a heredoc or a temp file to avoid shell escaping issues when passing the body:
+                BODY=$(cat <<'GHEOF'
+                <comment content>
+                GHEOF
+                )
+                gh pr comment ${{ github.event.pull_request.number }} --body "$BODY"
+        run: |
+          agent --force --model "$MODEL" --output-format=text --print "$SUMMARY_PROMPT"

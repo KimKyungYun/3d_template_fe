@@ -1,0 +1,169 @@
+@use "@/styles/tokens/spacing" as s;
+@use "@/styles/tokens/typography" as t;
+@use "@/styles/utils/mixins" as mx;
+
+.panel {
+  flex: 1;
+  min-height: 0;
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 100%;
+  padding: 0 s.$space-2 s.$space-2;
+  overflow-y: auto;
+
+  &__row {
+    @include mx.press(0.985);
+
+    --tone: var(--text-muted);
+    --tone-soft: var(--surface-hover);
+
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: s.$space-3;
+    width: 100%;
+    padding: s.$space-2 s.$space-3 s.$space-2 s.$space-2;
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: s.$radius-xs;
+    text-align: left;
+    transition: background-color 0.16s ease, border-color 0.16s ease;
+
+    // 왼쪽 상태 막대
+    &::before {
+      position: absolute;
+      top: 6px;
+      bottom: 6px;
+      left: 0;
+      width: 2px;
+      border-radius: 2px;
+      background-color: var(--tone);
+      box-shadow: 0 0 8px var(--tone);
+      content: "";
+    }
+
+    // 스캔 선이 지날 때 흐르는 빛
+    &::after {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, var(--accent-soft) 40%, var(--accent-line) 50%, transparent 60%);
+      content: "";
+      opacity: 0;
+      transform: translateX(-100%);
+      pointer-events: none;
+    }
+
+    &:hover {
+      background-color: var(--surface-hover);
+    }
+
+    &--critical {
+      --tone: var(--critical);
+      --tone-soft: var(--critical-soft);
+    }
+
+    &--caution {
+      --tone: var(--caution);
+      --tone-soft: var(--caution-soft);
+    }
+
+    &--offline {
+      --tone: var(--offline);
+      --tone-soft: var(--offline-soft);
+    }
+
+    &--active {
+      border-color: var(--accent-line);
+      background-color: var(--accent-soft);
+    }
+
+    &--fresh {
+      animation: feed-fresh 1.6s ease-out 2;
+    }
+
+    &--swept::after {
+      animation: feed-sweep 0.7s ease-out;
+    }
+  }
+
+  &__status {
+    @include t.label-sm;
+
+    flex-shrink: 0;
+    min-width: 34px;
+    padding: 2px 0;
+    border-radius: s.$radius-xs;
+    background-color: var(--tone-soft);
+    color: var(--tone);
+    text-align: center;
+  }
+
+  &__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__name {
+    @include t.data-sm;
+    @include mx.truncate;
+
+    color: var(--text-strong);
+
+    em {
+      @include t.label-md;
+
+      margin-left: s.$space-2;
+      color: var(--text);
+      font-style: normal;
+    }
+  }
+
+  &__meta {
+    @include t.caption;
+    @include mx.truncate;
+
+    color: var(--text-muted);
+  }
+
+  &__go {
+    flex-shrink: 0;
+    color: var(--text-faint);
+    font-size: 1.1rem;
+    transition: transform 0.16s ease, color 0.16s ease;
+  }
+
+  &__row:hover &__go {
+    color: var(--accent);
+    transform: translateX(2px);
+  }
+}
+
+@keyframes feed-sweep {
+  0% {
+    opacity: 1;
+    transform: translateX(-100%);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes feed-fresh {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+
+  30% {
+    background-color: var(--tone-soft);
+  }
+}
